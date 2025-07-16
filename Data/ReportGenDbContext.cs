@@ -15,46 +15,45 @@ public class ReportGenDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Value>()
-            .HasOne(v => v.Result)
-            .WithMany(r => r.Values)
-            .HasForeignKey(v => v.FileName)
-            .HasPrincipalKey(r => r.FileName)
-            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<Value>(entity =>
+    {
+        entity.Property(e => e.FileName)
+              .IsRequired();
 
-        modelBuilder.Entity<Value>()
-            .Property(v => v.FileName)
-            .IsRequired()
-            .HasMaxLength(255);
+        entity.Property(e => e.FileName)
+              .HasMaxLength(255);
 
-        modelBuilder.Entity<Value>()
-            .Property(v => v.StoreValue)
-            .HasColumnType("decimal(18,4)");
+        entity.Property(e => e.StoreValue)
+              .HasColumnType("decimal(18,4)");
 
-        modelBuilder.Entity<Result>()
-            .Property(r => r.FileName)
-            .IsRequired()
-            .HasMaxLength(255);
+        entity.HasOne(v => v.Result) 
+              .WithMany(r => r.Values) 
+              .HasForeignKey(v => v.FileName) 
+              .HasPrincipalKey(r => r.FileName); 
+    });
 
-        modelBuilder.Entity<Result>()
-            .Property(r => r.AvgExecutionTime)
-            .HasColumnType("decimal(18,4)");
+    modelBuilder.Entity<Result>(entity =>
+    {
+        entity.HasKey(e => e.FileName);
 
-        modelBuilder.Entity<Result>()
-            .Property(r => r.AvgStoreValue)
-            .HasColumnType("decimal(18,4)");
+        entity.Property(e => e.FileName)
+              .HasMaxLength(255);
 
-        modelBuilder.Entity<Result>()
-            .Property(r => r.MedianStoreValue)
-            .HasColumnType("decimal(18,4)");
+        entity.Property(e => e.AvgExecutionTime)
+              .HasColumnType("decimal(18,4)");
 
-        modelBuilder.Entity<Result>()
-            .Property(r => r.MaximumStoreValue)
-            .HasColumnType("decimal(18,4)");
+        entity.Property(e => e.AvgStoreValue)
+              .HasColumnType("decimal(18,4)");
 
-        modelBuilder.Entity<Result>()
-            .Property(r => r.MinimumStoreValue)
-            .HasColumnType("decimal(18,4)");
+        entity.Property(e => e.MedianStoreValue)
+              .HasColumnType("decimal(18,4)");
+
+        entity.Property(e => e.MaximumStoreValue)
+              .HasColumnType("decimal(18,4)");
+
+        entity.Property(e => e.MinimumStoreValue)
+              .HasColumnType("decimal(18,4)");
+    });
 
         base.OnModelCreating(modelBuilder);
     }

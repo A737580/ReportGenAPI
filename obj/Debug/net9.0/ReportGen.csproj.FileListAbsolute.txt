@@ -131,3 +131,4 @@
 /usr/local/LTable/projects/timescaleAPI/ReportGen/obj/Debug/net9.0/ReportGen.pdb
 /usr/local/LTable/projects/timescaleAPI/ReportGen/obj/Debug/net9.0/ReportGen.genruntimeconfig.cache
 /usr/local/LTable/projects/timescaleAPI/ReportGen/obj/Debug/net9.0/ref/ReportGen.dll
+/usr/local/LTable/projects/timescaleAPI/ReportGen/obj/Debug/net9.0/ReportGen.sourcelink.json

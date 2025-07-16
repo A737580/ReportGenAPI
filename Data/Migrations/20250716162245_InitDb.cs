@@ -4,7 +4,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace ReportGen.Migrations
+namespace ReportGen.Data.Migrations
 {
     /// <inheritdoc />
     public partial class InitDb : Migration
@@ -18,8 +18,8 @@ namespace ReportGen.Migrations
                 {
                     FileName = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
                     DeltaTime = table.Column<int>(type: "integer", nullable: false),
-                    MinimumDateTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    AvgExecutionTime = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    MinimumDateTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    AvgExecutionTime = table.Column<double>(type: "numeric(18,4)", nullable: false),
                     AvgStoreValue = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
                     MedianStoreValue = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
                     MaximumStoreValue = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
@@ -36,7 +36,7 @@ namespace ReportGen.Migrations
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    StartDateTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    StartDateTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     FileName = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
                     ExecutionTimeS = table.Column<int>(type: "integer", nullable: false),
                     StoreValue = table.Column<decimal>(type: "numeric(18,4)", nullable: false)

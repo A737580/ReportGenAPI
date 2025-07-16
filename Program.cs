@@ -1,13 +1,16 @@
 
 
 using Microsoft.EntityFrameworkCore;
-using ReportGen.Models;
 using ReportGen.Data;
+using ReportGen.Services;
+using ReportGen.Middleware;
 
 
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddScoped<ICsvProcessingService, CsvProcessingService>();
+builder.Services.AddControllers();
 
 builder.Services.AddDbContext<ReportGenDbContext>(options =>
 {
@@ -17,6 +20,15 @@ builder.Services.AddDbContext<ReportGenDbContext>(options =>
 
 var app = builder.Build();
 
-app.MapGet("/", () => "Hello World!");
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage(); 
+}
+else
+{
+    app.UseErrorHandlingMiddleware(); 
+}
+
+app.MapControllers();
 
 app.Run();

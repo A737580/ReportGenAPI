@@ -9,10 +9,10 @@ using ReportGen.Data;
 
 #nullable disable
 
-namespace ReportGen.Migrations
+namespace ReportGen.Data.Migrations
 {
     [DbContext(typeof(ReportGenDbContext))]
-    [Migration("20250715185356_InitDb")]
+    [Migration("20250716162245_InitDb")]
     partial class InitDb
     {
         /// <inheritdoc />
@@ -31,7 +31,7 @@ namespace ReportGen.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<decimal>("AvgExecutionTime")
+                    b.Property<double>("AvgExecutionTime")
                         .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("AvgStoreValue")
@@ -46,7 +46,7 @@ namespace ReportGen.Migrations
                     b.Property<decimal>("MedianStoreValue")
                         .HasColumnType("decimal(18,4)");
 
-                    b.Property<DateTime>("MinimumDateTime")
+                    b.Property<DateTimeOffset>("MinimumDateTime")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<decimal>("MinimumStoreValue")
@@ -73,7 +73,7 @@ namespace ReportGen.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<DateTime>("StartDateTime")
+                    b.Property<DateTimeOffset>("StartDateTime")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<decimal>("StoreValue")

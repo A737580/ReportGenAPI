@@ -6,7 +6,7 @@ namespace ReportGen.Models;
 public class Value
 {
     public int Id { get; set; } 
-    public DateTime StartDateTime { get; set; }
+    public DateTimeOffset StartDateTime { get; set; }
     [Required]
     [MaxLength(255)]
     [ForeignKey("Result")]

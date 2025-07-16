@@ -2,18 +2,21 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using ReportGen.Data;
 
 #nullable disable
 
-namespace ReportGen.Migrations
+namespace ReportGen.Data.Migrations
 {
     [DbContext(typeof(ReportGenDbContext))]
-    partial class ReportGenDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250716162314_AddGetMedianFunction")]
+    partial class AddGetMedianFunction
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -28,7 +31,7 @@ namespace ReportGen.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<decimal>("AvgExecutionTime")
+                    b.Property<double>("AvgExecutionTime")
                         .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("AvgStoreValue")
@@ -43,7 +46,7 @@ namespace ReportGen.Migrations
                     b.Property<decimal>("MedianStoreValue")
                         .HasColumnType("decimal(18,4)");
 
-                    b.Property<DateTime>("MinimumDateTime")
+                    b.Property<DateTimeOffset>("MinimumDateTime")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<decimal>("MinimumStoreValue")
@@ -70,7 +73,7 @@ namespace ReportGen.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<DateTime>("StartDateTime")
+                    b.Property<DateTimeOffset>("StartDateTime")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<decimal>("StoreValue")
