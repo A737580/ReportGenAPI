@@ -36,6 +36,7 @@ public class ErrorHandlingMiddleware
         {
             statusCode = HttpStatusCode.BadRequest;
             message = exception.Message;
+            
         }
 
         context.Response.StatusCode = (int)statusCode;

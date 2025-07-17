@@ -17,7 +17,7 @@ namespace ReportGen.Data.Migrations
                 columns: table => new
                 {
                     FileName = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    DeltaTime = table.Column<int>(type: "integer", nullable: false),
+                    DeltaTimeS = table.Column<int>(type: "integer", nullable: false),
                     MinimumDateTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     AvgExecutionTime = table.Column<double>(type: "numeric(18,4)", nullable: false),
                     AvgStoreValue = table.Column<decimal>(type: "numeric(18,4)", nullable: false),

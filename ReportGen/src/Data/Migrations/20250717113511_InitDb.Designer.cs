@@ -12,7 +12,7 @@ using ReportGen.Data;
 namespace ReportGen.Data.Migrations
 {
     [DbContext(typeof(ReportGenDbContext))]
-    [Migration("20250716162245_InitDb")]
+    [Migration("20250717113511_InitDb")]
     partial class InitDb
     {
         /// <inheritdoc />
@@ -37,7 +37,7 @@ namespace ReportGen.Data.Migrations
                     b.Property<decimal>("AvgStoreValue")
                         .HasColumnType("decimal(18,4)");
 
-                    b.Property<int>("DeltaTime")
+                    b.Property<int>("DeltaTimeS")
                         .HasColumnType("integer");
 
                     b.Property<decimal>("MaximumStoreValue")

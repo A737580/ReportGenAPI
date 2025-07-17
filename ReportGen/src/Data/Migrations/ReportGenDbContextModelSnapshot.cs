@@ -34,7 +34,7 @@ namespace ReportGen.Data.Migrations
                     b.Property<decimal>("AvgStoreValue")
                         .HasColumnType("decimal(18,4)");
 
-                    b.Property<int>("DeltaTime")
+                    b.Property<int>("DeltaTimeS")
                         .HasColumnType("integer");
 
                     b.Property<decimal>("MaximumStoreValue")

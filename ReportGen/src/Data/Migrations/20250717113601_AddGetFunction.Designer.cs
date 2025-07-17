@@ -12,8 +12,8 @@ using ReportGen.Data;
 namespace ReportGen.Data.Migrations
 {
     [DbContext(typeof(ReportGenDbContext))]
-    [Migration("20250716162314_AddGetMedianFunction")]
-    partial class AddGetMedianFunction
+    [Migration("20250717113601_AddGetFunction")]
+    partial class AddGetFunction
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -37,7 +37,7 @@ namespace ReportGen.Data.Migrations
                     b.Property<decimal>("AvgStoreValue")
                         .HasColumnType("decimal(18,4)");
 
-                    b.Property<int>("DeltaTime")
+                    b.Property<int>("DeltaTimeS")
                         .HasColumnType("integer");
 
                     b.Property<decimal>("MaximumStoreValue")

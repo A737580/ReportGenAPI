@@ -30,6 +30,27 @@ public class CsvProcessingService : ICsvProcessingService
             await _dbContext.Values.Where(v => v.FileName == fileName).ExecuteDeleteAsync();
             await _dbContext.Results.Where(r => r.FileName == fileName).ExecuteDeleteAsync();
 
+            var resultEntity = await _dbContext.Results.FindAsync(fileName);
+
+            if (resultEntity == null)
+            {
+                resultEntity = new Result
+                {
+                    FileName = fileName,
+                    DeltaTimeS = 0,
+                    MinimumDateTime = DateTimeOffset.MinValue,
+                    AvgExecutionTime = 0,
+                    AvgStoreValue = 0,
+                    MedianStoreValue = 0,
+                    MaximumStoreValue = 0,
+                    MinimumStoreValue = 0
+                };
+                await _dbContext.Results.AddAsync(resultEntity);
+
+                await _dbContext.SaveChangesAsync();
+            }
+
+
             using (var reader = new StreamReader(fileStream))
             {
                 string line;
@@ -62,6 +83,7 @@ public class CsvProcessingService : ICsvProcessingService
                             continue;
                         }
                         hasTitle = string.Join("", parts.Select(x => x.Trim())).ToLower().Trim() == "dateexecutiontimevalue";
+                        continue;
                     }
 
                     DateTimeOffset StartDateTime;
@@ -170,11 +192,24 @@ public class CsvProcessingService : ICsvProcessingService
             await CalculateAndUpsertResultsAsync(fileName);
 
             await transaction.CommitAsync();
+
+            
         }
-        catch (CsvValidationException) 
+        catch (CsvValidationException ex)
         {
             await transaction.RollbackAsync();
-            throw; 
+
+            Console.WriteLine($"Ошибка валидации CSV: {ex.Message}");
+            if (ex.Errors.Any())
+            {
+                Console.WriteLine("Детали ошибок валидации:");
+                foreach (var error in ex.Errors)
+                {
+                    Console.WriteLine($"- Номер строки: {error.RowNumber}, Номер колонки: {error.ColumnName}, Ошибка: {error.Message}, Значение: {error.Value}");
+                }
+            }
+
+            throw;
         }
         catch (Exception ex)
         {
@@ -187,61 +222,60 @@ public class CsvProcessingService : ICsvProcessingService
         return targetDate >= startDate && targetDate <= endDate;
     }
     private async Task CalculateAndUpsertResultsAsync(string fileName)
-    {
-        var query = await _dbContext.Values
-            .Where(v => v.FileName == fileName)
-            .GroupBy(v => v.FileName)
-            .Select(g => new
-            {
-                FileName = g.Key,
-                DeltaTime = g.Max(v => v.StartDateTime)-g.Min(v => v.StartDateTime),
-                MinimumDateTime = g.Min(v => v.StartDateTime),
-                AvgExecutionTime = g.Average(v => v.ExecutionTimeS),
-                AvgStoreValue = g.Average(v => v.StoreValue),
-
-                MaximumStoreValue = g.Max(v => v.StoreValue),
-                MinimumStoreValue = g.Min(v => v.StoreValue),
-
-            })
-            .FirstOrDefaultAsync();
-        decimal medianStoreValue = 0m; 
-        if (query != null)
+{
+    var query = await _dbContext.Values
+        .Where(v => v.FileName == fileName)
+        .GroupBy(v => v.FileName)
+        .Select(g => new 
         {
-            try
-            {
-                medianStoreValue = await _dbContext.Set<ScalarDecimalResult>()
-                                        .FromSqlInterpolated($"SELECT get_median_store_value_for_file({fileName})")
-                                        .AsNoTracking()
-                                        .Select(r => r.Value)
-                                        .FirstAsync();
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException($"Ошибка при вычислении медианы для файла {fileName}.");
-            }
-            var result = new Result
-            {
-                FileName = query.FileName,
-                DeltaTime = (int)query.DeltaTime.TotalSeconds,
-                MinimumDateTime = query.MinimumDateTime,
-                AvgExecutionTime = query.AvgExecutionTime, 
-                AvgStoreValue = query.AvgStoreValue,
-                MedianStoreValue = medianStoreValue,
-                MaximumStoreValue = query.MaximumStoreValue,
-                MinimumStoreValue = query.MinimumStoreValue
-            };
+            FileName = g.Key,
+            DeltaTime = (int)(g.Max(v => v.StartDateTime)-g.Min(v => v.StartDateTime)).TotalSeconds,
+            MinimumDateTime = g.Min(v => v.StartDateTime),
+            AvgExecutionTime = g.Average(v => v.ExecutionTimeS),
+            AvgStoreValue = g.Average(v => v.StoreValue),
+            MaximumStoreValue = g.Max(v => v.StoreValue),
+            MinimumStoreValue = g.Min(v => v.StoreValue), 
+        })
+        .FirstOrDefaultAsync();
 
-            var existingResult = await _dbContext.Results.FindAsync(fileName);
-            if (existingResult == null)
-            {
-                await _dbContext.Results.AddAsync(result);
-            }
-            else
-            {
-                _dbContext.Entry(existingResult).CurrentValues.SetValues(result);
-            }
+    decimal medianStoreValue = 0m;
+
+    if (query != null)
+    {
+        try
+        {
+            medianStoreValue = await _dbContext.Set<ScalarDecimalResult>()
+                                    .FromSqlInterpolated($"SELECT get_median_store_value_for_file({fileName}) AS Value")
+                                    .AsNoTracking()
+                                    .Select(r => r.Value)
+                                    .FirstAsync();
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"Произошла ошибка при вычислении медианы.");
+        }
+
+        var existingResult = await _dbContext.Results.FindAsync(fileName);
+
+        if (existingResult != null)
+        {
+            existingResult.FileName = query.FileName; 
+            existingResult.DeltaTimeS = query.DeltaTime; 
+            existingResult.MinimumDateTime = query.MinimumDateTime;
+            existingResult.AvgExecutionTime = query.AvgExecutionTime;
+            existingResult.AvgStoreValue = query.AvgStoreValue;
+            existingResult.MedianStoreValue = medianStoreValue;
+            existingResult.MaximumStoreValue = query.MaximumStoreValue;
+            existingResult.MinimumStoreValue = query.MinimumStoreValue;
+
             await _dbContext.SaveChangesAsync();
         }
+        else
+        {
+
+            throw new InvalidOperationException($"Ошибка обработки.");
+        }
     }
+}
 }
 

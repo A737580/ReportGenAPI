@@ -10,7 +10,7 @@ public class Result
     [Key]
     [MaxLength(255)]
     public string FileName { get; set; }
-    public int DeltaTime { get; set; }
+    public int DeltaTimeS { get; set; }
     public DateTimeOffset MinimumDateTime { get; set; }
     public double AvgExecutionTime { get; set; }
     public decimal AvgStoreValue { get; set; }

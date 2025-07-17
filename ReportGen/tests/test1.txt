@@ -1,0 +1,1 @@
+curl -X POST -F "file=@report3_invalid.csv" "http://localhost:5147/api/report/upload_csv" -k
