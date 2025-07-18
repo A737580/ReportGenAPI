@@ -1,0 +1,11 @@
+{
+  "fileName": "report1_valid.csv",
+  "minMinimumDateTime": "2024-01-01T00:00:00Z",
+  "maxMinimumDateTime": "2024-12-31T23:59:59Z",
+  "minAvgExecutionTime": 5.0,
+  "maxAvgExecutionTime": 10.0,
+  "minAvgStoreValue": 100.50,
+  "maxAvgStoreValue": 200.00,
+  "minDeltaTimeS": 60,
+  "maxDeltaTimeS": 300
+}
