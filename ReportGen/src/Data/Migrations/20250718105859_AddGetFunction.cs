@@ -10,8 +10,9 @@ namespace ReportGen.Data.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.Sql(@"CREATE OR REPLACE FUNCTION get_median_store_value_for_file(file_name_param TEXT)
-                RETURNS NUMERIC AS $$
+            migrationBuilder.Sql(@"
+            CREATE OR REPLACE FUNCTION get_median_store_value_for_file(file_name_param TEXT)
+                RETURNS TABLE (value NUMERIC) AS $$
                 DECLARE
                     median_val NUMERIC;
                 BEGIN
@@ -20,7 +21,7 @@ namespace ReportGen.Data.Migrations
                     FROM ""Values""
                     WHERE ""FileName"" = file_name_param;
 
-                    RETURN median_val;
+                    RETURN QUERY SELECT median_val;
                 END;
                 $$ LANGUAGE plpgsql;");
         }

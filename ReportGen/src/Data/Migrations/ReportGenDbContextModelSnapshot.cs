@@ -54,6 +54,17 @@ namespace ReportGen.Data.Migrations
                     b.ToTable("Results");
                 });
 
+            modelBuilder.Entity("ReportGen.Models.ScalarDecimalResult", b =>
+                {
+                    b.Property<decimal>("Value")
+                        .HasColumnType("numeric")
+                        .HasColumnName("value");
+
+                    b.ToTable((string)null);
+
+                    b.ToView(null, (string)null);
+                });
+
             modelBuilder.Entity("ReportGen.Models.Value", b =>
                 {
                     b.Property<int>("Id")

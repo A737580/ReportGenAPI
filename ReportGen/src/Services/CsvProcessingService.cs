@@ -245,14 +245,14 @@ public class CsvProcessingService : ICsvProcessingService
         try
         {
             medianStoreValue = await _dbContext.Set<ScalarDecimalResult>()
-                                    .FromSqlInterpolated($"SELECT get_median_store_value_for_file({fileName}) AS Value")
+                                    .FromSqlInterpolated($"SELECT get_median_store_value_for_file({fileName}) AS value")
                                     .AsNoTracking()
                                     .Select(r => r.Value)
                                     .FirstAsync();
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException($"Произошла ошибка при вычислении медианы.");
+            throw new InvalidOperationException($"Произошла ошибка при вычислении медианы.{ex.Message}");
         }
 
         var existingResult = await _dbContext.Results.FindAsync(fileName);

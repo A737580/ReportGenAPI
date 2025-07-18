@@ -12,7 +12,7 @@ using ReportGen.Data;
 namespace ReportGen.Data.Migrations
 {
     [DbContext(typeof(ReportGenDbContext))]
-    [Migration("20250717113511_InitDb")]
+    [Migration("20250718105839_InitDb")]
     partial class InitDb
     {
         /// <inheritdoc />
@@ -55,6 +55,17 @@ namespace ReportGen.Data.Migrations
                     b.HasKey("FileName");
 
                     b.ToTable("Results");
+                });
+
+            modelBuilder.Entity("ReportGen.Models.ScalarDecimalResult", b =>
+                {
+                    b.Property<decimal>("Value")
+                        .HasColumnType("numeric")
+                        .HasColumnName("value");
+
+                    b.ToTable((string)null);
+
+                    b.ToView(null, (string)null);
                 });
 
             modelBuilder.Entity("ReportGen.Models.Value", b =>
