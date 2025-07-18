@@ -42,7 +42,7 @@ public class ReportController : ControllerBase
     }
 
     [HttpPost("search_results")]
-    public async Task<ActionResult<IEnumerable<Result>>> GetResultsByParameters([FromBody]ResultFilterParametersDto requestParameters)
+    public async Task<ActionResult<IEnumerable<ResultResponceDto>>> GetResultsByParameters([FromBody]ResultFilterParametersDto requestParameters)
     {
         if (requestParameters == null)
         {
@@ -92,13 +92,32 @@ public class ReportController : ControllerBase
         }
 
         var results = await _resultRepository.GetResultsByParametersAsync(repositoryParameters);
-        return Ok(results);
+        var resultDtos = results.Select(x=> new ResultResponceDto()
+        {
+            FileName = x.FileName,
+            DeltaTimeS = x.DeltaTimeS,
+            MinimumDateTime = x.MinimumDateTime,
+            AvgExecutionTime = x.AvgExecutionTime,
+            AvgStoreValue = x.AvgStoreValue,
+            MedianStoreValue = x.MedianStoreValue,
+            MaximumStoreValue = x.MaximumStoreValue,
+            MinimumStoreValue = x.MinimumStoreValue
+        }); 
+        return Ok(resultDtos);
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Value>>> GetLatestValues()
+    public async Task<ActionResult<IEnumerable<ValueResponceDto>>> GetLatestValues()
     {
         var result = await _resultRepository.GetLatestValuesAsync();
-        return Ok(result);
+        var resultDtos = result.Select(x => new ValueResponceDto()
+        {
+            Id = x.Id,
+            StartDateTime = x.StartDateTime,
+            FileName = x.FileName,
+            ExecutionTimeS = x.ExecutionTimeS,
+            StoreValue = x.StoreValue
+        });
+        return Ok(resultDtos);
     }
 }
