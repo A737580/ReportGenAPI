@@ -1,6 +1,7 @@
 
 
 using System.Globalization;
+using System.Text;
 using Microsoft.EntityFrameworkCore;
 using ReportGen.Data;
 using ReportGen.Models;
@@ -10,16 +11,16 @@ namespace ReportGen.Services;
 
 public class CsvProcessingService : ICsvProcessingService
 {
-    private readonly ReportGenDbContext _dbContext;
+    private readonly ReportGenDbContext _context;
 
-    public CsvProcessingService(ReportGenDbContext dbContext)
+    public CsvProcessingService(ReportGenDbContext context)
     {
-        _dbContext = dbContext;
+        _context = context;
     }
 
     public async Task ProcessCsvFileAsync(string fileName, Stream fileStream)
     {
-        using var transaction = await _dbContext.Database.BeginTransactionAsync();
+        using var transaction = await _context.Database.BeginTransactionAsync();
         List<CsvValidationError> validationErrors = new List<CsvValidationError>();
         List<Value> valuesToInsert = new List<Value>();
         int rowNumber = 0;
@@ -27,10 +28,10 @@ public class CsvProcessingService : ICsvProcessingService
 
         try
         {
-            await _dbContext.Values.Where(v => v.FileName == fileName).ExecuteDeleteAsync();
-            await _dbContext.Results.Where(r => r.FileName == fileName).ExecuteDeleteAsync();
+            await _context.Values.Where(v => v.FileName == fileName).ExecuteDeleteAsync();
+            await _context.Results.Where(r => r.FileName == fileName).ExecuteDeleteAsync();
 
-            var resultEntity = await _dbContext.Results.FindAsync(fileName);
+            var resultEntity = await _context.Results.FindAsync(fileName);
 
             if (resultEntity == null)
             {
@@ -45,15 +46,15 @@ public class CsvProcessingService : ICsvProcessingService
                     MaximumStoreValue = 0,
                     MinimumStoreValue = 0
                 };
-                await _dbContext.Results.AddAsync(resultEntity);
+                await _context.Results.AddAsync(resultEntity);
 
-                await _dbContext.SaveChangesAsync();
+                await _context.SaveChangesAsync();
             }
 
 
             using (var reader = new StreamReader(fileStream))
             {
-                string line;
+                string? line;
                 while ((line = await reader.ReadLineAsync()) != null)
                 {
 
@@ -173,21 +174,23 @@ public class CsvProcessingService : ICsvProcessingService
             if (!hasTitle)
             {
                 throw new InvalidOperationException("CSV-файл имеет неверный формат, должен быть заголовок - Date;ExecutionTime;Value");
+
+            }
+
+            if (validationErrors.Any())
+            {
+                throw new CsvValidationException($"Обнаружены ошибки при валидации CSV-файла: {fileName}.", validationErrors);
+
             }
 
             if (valuesToInsert.Count < 1 || valuesToInsert.Count > 10000)
             {
                 throw new InvalidOperationException("CSV-файл не может иметь менее 1 или более 10000 записей.");
+
             }
 
-            if (validationErrors.Any())
-            {
-                throw new CsvValidationException("Обнаружены ошибки при валидации CSV-файла.", validationErrors);
-            }
-
-
-            await _dbContext.AddRangeAsync(valuesToInsert);
-            await _dbContext.SaveChangesAsync();
+            await _context.AddRangeAsync(valuesToInsert);
+            await _context.SaveChangesAsync();
 
             await CalculateAndUpsertResultsAsync(fileName);
 
@@ -197,24 +200,24 @@ public class CsvProcessingService : ICsvProcessingService
         }
         catch (CsvValidationException ex)
         {
+
             await transaction.RollbackAsync();
 
-            Console.WriteLine($"Ошибка валидации CSV: {ex.Message}");
-            if (ex.Errors.Any())
-            {
-                Console.WriteLine("Детали ошибок валидации:");
-                foreach (var error in ex.Errors)
-                {
-                    Console.WriteLine($"- Номер строки: {error.RowNumber}, Номер колонки: {error.ColumnName}, Ошибка: {error.Message}, Значение: {error.Value}");
-                }
-            }
+            throw new CsvValidationException(ex.Message, validationErrors);
 
-            throw;
+        }
+        catch (InvalidOperationException ex)
+        {
+
+            await transaction.RollbackAsync();
+
+            throw new InvalidOperationException(ex.Message);
+
         }
         catch (Exception ex)
         {
             await transaction.RollbackAsync();
-            throw new InvalidOperationException($"Произошла ошибка при обработке файла '{fileName}'.", ex);
+            throw new InvalidOperationException($"Произошла ошибка при обработке файла'{fileName}'.", ex);
         }
     }
     private bool IsDateInDateRange(DateTimeOffset targetDate, DateTimeOffset startDate, DateTimeOffset endDate)
@@ -222,60 +225,61 @@ public class CsvProcessingService : ICsvProcessingService
         return targetDate >= startDate && targetDate <= endDate;
     }
     private async Task CalculateAndUpsertResultsAsync(string fileName)
-{
-    var query = await _dbContext.Values
-        .Where(v => v.FileName == fileName)
-        .GroupBy(v => v.FileName)
-        .Select(g => new 
-        {
-            FileName = g.Key,
-            DeltaTime = (int)(g.Max(v => v.StartDateTime)-g.Min(v => v.StartDateTime)).TotalSeconds,
-            MinimumDateTime = g.Min(v => v.StartDateTime),
-            AvgExecutionTime = g.Average(v => v.ExecutionTimeS),
-            AvgStoreValue = g.Average(v => v.StoreValue),
-            MaximumStoreValue = g.Max(v => v.StoreValue),
-            MinimumStoreValue = g.Min(v => v.StoreValue), 
-        })
-        .FirstOrDefaultAsync();
-
-    decimal medianStoreValue = 0m;
-
-    if (query != null)
     {
-        try
-        {
-            medianStoreValue = await _dbContext.Set<ScalarDecimalResult>()
-                                    .FromSqlInterpolated($"SELECT get_median_store_value_for_file({fileName}) AS value")
-                                    .AsNoTracking()
-                                    .Select(r => r.Value)
-                                    .FirstAsync();
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException($"Произошла ошибка при вычислении медианы.{ex.Message}");
-        }
+        var query = await _context.Values
+            .Where(v => v.FileName == fileName)
+            .GroupBy(v => v.FileName)
+            .Select(g => new 
+            {
+                FileName = g.Key,
+                DeltaTime = (int)(g.Max(v => v.StartDateTime)-g.Min(v => v.StartDateTime)).TotalSeconds,
+                MinimumDateTime = g.Min(v => v.StartDateTime),
+                AvgExecutionTime = g.Average(v => v.ExecutionTimeS),
+                AvgStoreValue = g.Average(v => v.StoreValue),
+                MaximumStoreValue = g.Max(v => v.StoreValue),
+                MinimumStoreValue = g.Min(v => v.StoreValue), 
+            })
+            .FirstOrDefaultAsync();
 
-        var existingResult = await _dbContext.Results.FindAsync(fileName);
+        decimal medianStoreValue = 0m;
 
-        if (existingResult != null)
+        if (query != null)
         {
-            existingResult.FileName = query.FileName; 
-            existingResult.DeltaTimeS = query.DeltaTime; 
-            existingResult.MinimumDateTime = query.MinimumDateTime;
-            existingResult.AvgExecutionTime = query.AvgExecutionTime;
-            existingResult.AvgStoreValue = query.AvgStoreValue;
-            existingResult.MedianStoreValue = medianStoreValue;
-            existingResult.MaximumStoreValue = query.MaximumStoreValue;
-            existingResult.MinimumStoreValue = query.MinimumStoreValue;
+            try
+            {
+                medianStoreValue = await _context.Set<ScalarDecimalResult>()
+                                        .FromSqlInterpolated($"SELECT get_median_store_value_for_file({fileName}) AS value")
+                                        .AsNoTracking()
+                                        .Select(r => r.Value)
+                                        .OrderBy(x => 1)
+                                        .FirstAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Произошла ошибка при вычислении медианы.{ex.Message}");
+            }
 
-            await _dbContext.SaveChangesAsync();
-        }
-        else
-        {
+            var existingResult = await _context.Results.FindAsync(fileName);
 
-            throw new InvalidOperationException($"Ошибка обработки.");
+            if (existingResult != null)
+            {
+                existingResult.FileName = query.FileName; 
+                existingResult.DeltaTimeS = query.DeltaTime; 
+                existingResult.MinimumDateTime = query.MinimumDateTime;
+                existingResult.AvgExecutionTime = query.AvgExecutionTime;
+                existingResult.AvgStoreValue = query.AvgStoreValue;
+                existingResult.MedianStoreValue = medianStoreValue;
+                existingResult.MaximumStoreValue = query.MaximumStoreValue;
+                existingResult.MinimumStoreValue = query.MinimumStoreValue;
+
+                await _context.SaveChangesAsync();
+            }
+            else
+            {
+
+                throw new InvalidOperationException($"Ошибка обработки.");
+            }
         }
     }
-}
 }
 

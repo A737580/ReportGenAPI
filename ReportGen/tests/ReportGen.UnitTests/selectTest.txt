@@ -1,0 +1,1 @@
+dotnet test --filter "FullyQualifiedName~ReportGen.UnitTests.Controllers.ReportControllerTests.UploadCsvFile_ShouldReturnBadRequest_WhenFileIsNull"

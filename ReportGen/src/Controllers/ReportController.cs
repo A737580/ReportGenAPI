@@ -106,10 +106,14 @@ public class ReportController : ControllerBase
         return Ok(resultDtos);
     }
 
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<ValueResponceDto>>> GetLatestValues()
+    [HttpGet("values/{fileName}")]
+    public async Task<ActionResult<IEnumerable<ValueResponceDto>>> GetLatestValues(string fileName)
     {
-        var result = await _resultRepository.GetLatestValuesAsync();
+        IEnumerable<Value> result = await _resultRepository.GetLatestValuesAsync(fileName);
+        if (!result.Any())
+        {
+            return NotFound();
+        }
         var resultDtos = result.Select(x => new ValueResponceDto()
         {
             Id = x.Id,

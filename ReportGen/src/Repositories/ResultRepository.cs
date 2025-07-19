@@ -14,9 +14,9 @@ namespace ReportGen.Repositories
             _context = context;
         }
 
-        public async Task<IEnumerable<Value>> GetLatestValuesAsync()
+        public async Task<IEnumerable<Value>> GetLatestValuesAsync(string fileName)
         {
-            return await _context.Values.OrderBy(v => v.StartDateTime).Take(10).ToListAsync();
+            return await _context.Values.Where(v => v.FileName == fileName).OrderBy(v => v.StartDateTime).Take(10).ToListAsync();
         }
 
         public async Task<IEnumerable<Result>> GetResultsByParametersAsync(ResultFilterRepositoryDto parameters)

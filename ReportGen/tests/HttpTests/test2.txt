@@ -1,0 +1,3 @@
+curl -X POST -H "Content-Type: application/json" -d "@report1.json" "http://localhost:5147/api/report/search_results" -k
+
+curl -X POST -H "Content-Type: application/json" http://localhost:5147/api/Report/search_results --data ""

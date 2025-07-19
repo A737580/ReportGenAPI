@@ -42,22 +42,21 @@ builder.Services.AddDbContext<ReportGenDbContext>(options =>
 
 var app = builder.Build();
 
+app.UseErrorHandlingMiddleware();
+
 if (app.Environment.IsDevelopment())
 {
-    app.UseDeveloperExceptionPage(); 
-    
-    app.UseSwagger(); 
+    // app.UseDeveloperExceptionPage();
+
+    app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "ReportGen API v1"); 
-        c.RoutePrefix = "swagger"; 
-        c.DocumentTitle = "Документация API"; 
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "ReportGen API v1");
+        c.RoutePrefix = "swagger";
+        c.DocumentTitle = "Документация API";
     });
 }
-else
-{
-    app.UseErrorHandlingMiddleware();
-}
+
 
 app.MapControllers();
 
